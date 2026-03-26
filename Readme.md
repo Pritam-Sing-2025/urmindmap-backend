@@ -1,100 +1,71 @@
-# AI Notes to Mind Map Generator
+# MindMap Server
 
-Full-stack web app that turns pasted notes or paragraphs into an interactive visual mind map using Gemini.
+Express API for generating mind map JSON from user notes with Gemini. This folder is prepared to deploy on Render and work cleanly with the Vercel frontend.
 
 ## Stack
 
-- Frontend: React + Vite
-- Styling: Tailwind CSS
-- Animations: Framer Motion
-- Visualization: React Flow (`@xyflow/react`)
-- Backend: Node.js + Express
-- AI: Gemini API
-- Deployment: Vercel for the client, Render or Railway for the server
+- Node.js
+- Express
+- CORS
+- Gemini via `@google/genai`
 
-## Features
+## API Routes
 
-- Paste notes and generate a structured mind map with AI
-- Modern landing page and polished app workspace
-- Glassmorphism cards, gradients, and motion-driven UI
-- Interactive mind map canvas with drag, zoom, minimap, and controls
-- Branch color-coding and auto-balanced left/right layout
-- Collapse or expand branches
-- Edit node labels directly from the canvas
-- Export the map as PNG
-- Export the map as JSON
-- Save maps locally in the browser
-- Copy a shareable link with encoded map data
-- Example notes button
-- Dark mode toggle
-- Mobile-responsive layout
+- `GET /`
+- `GET /health`
+- `GET /api/health`
+- `POST /api/generate-mindmap`
+- `POST /generate-mindmap`
 
-## Project Structure
+## Environment Variables
 
-```text
-client/
-  src/
-    components/
-    pages/
-    App.jsx
-    main.jsx
-server/
-  controllers/
-  routes/
-  utils/
-  index.js
+Required:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-## Local Setup
+Optional:
 
-### 1. Install dependencies
+```bash
+GEMINI_MODEL=gemini-2.5-flash
+PORT=5001
+ALLOWED_ORIGIN=http://localhost:5173
+ALLOWED_ORIGINS=http://localhost:5173,https://your-app.vercel.app
+ALLOWED_ORIGIN_PATTERNS=https://*.vercel.app
+```
+
+Notes:
+
+- If no CORS env vars are set, the API allows cross-origin requests by default so initial deployment is less likely to get blocked.
+- `ALLOWED_ORIGINS` accepts a comma-separated list of exact origins.
+- `ALLOWED_ORIGIN_PATTERNS` accepts wildcard patterns such as `https://*.vercel.app`.
+
+## Local Development
+
+1. Install dependencies:
 
 ```bash
 npm install
-npm install --workspace client
-npm install --workspace server
 ```
 
-### 2. Create env files
-
-Copy the examples:
+2. Create your env file:
 
 ```bash
-cp client/.env.example client/.env
-cp server/.env.example server/.env
+cp .env.example .env
 ```
 
-### 3. Add your Gemini API key
-
-Set `GEMINI_API_KEY` inside [server/.env](/Users/apple/Downloads/VS-code/Vibecode/mindmap/server/.env.example).
-
-Optional server vars:
-
-- `GEMINI_MODEL=gemini-2.5-flash`
-- `PORT=5001`
-- `ALLOWED_ORIGIN=http://localhost:5173`
-
-Optional client vars:
-
-- `VITE_API_BASE_URL=http://localhost:5001/api`
-
-### 4. Run the app
-
-From the project root:
+3. Start the API:
 
 ```bash
 npm run dev
 ```
 
-Frontend: `http://localhost:5173`
+The server runs on `http://localhost:5001` by default.
 
-Backend health check: `http://localhost:5001/api/health`
+## Request Format
 
-## API
-
-### `POST /generate-mindmap`
-
-Also available at `POST /api/generate-mindmap`
+`POST /api/generate-mindmap`
 
 Request body:
 
@@ -104,7 +75,7 @@ Request body:
 }
 ```
 
-Response:
+Successful response:
 
 ```json
 {
@@ -121,55 +92,29 @@ Response:
 }
 ```
 
-## Gemini Prompt Used
+## Deploy To Render
 
-The backend wraps this user-facing prompt:
+1. Create a new Render Web Service from this repository.
+2. Set the Root Directory to `server`.
+3. Build Command: `npm install`
+4. Start Command: `npm run start`
+5. Add `GEMINI_API_KEY`.
+6. Optionally add `ALLOWED_ORIGINS` with your Vercel URL once your frontend domain is known.
 
-```text
-Convert the following notes into a hierarchical mind map structure.
-Return ONLY JSON in this format:
-{
-  "title": "",
-  "nodes": [
-    { "title": "", "children": [] }
-  ]
-}
-Notes: [USER INPUT]
+This folder includes [render.yaml](/Users/apple/Downloads/VS-code/Vibecode/mindmap/server/render.yaml) with a health check at `/api/health`.
+
+## Connect To The Frontend
+
+In the Vercel project for the client, set:
+
+```bash
+VITE_API_BASE_URL=https://your-render-service.onrender.com/api
 ```
 
-The response is constrained with a JSON schema before it reaches the client.
-
-## Deployment
-
-### Frontend on Vercel
-
-1. Import the `client` folder as a Vercel project.
-2. Set `VITE_API_BASE_URL` to your deployed backend URL plus `/api`.
-3. Deploy.
-
-`client/vercel.json` already includes an SPA rewrite for React Router.
-
-### Backend on Render
-
-1. Create a new Web Service from this repository.
-2. Set the root directory to `server`.
-3. Build command: `npm install`
-4. Start command: `npm run start`
-5. Add:
-   - `GEMINI_API_KEY`
-   - `GEMINI_MODEL`
-   - `ALLOWED_ORIGIN`
-
-The root [render.yaml](/Users/apple/Downloads/VS-code/Vibecode/mindmap/render.yaml) can also be used as a starting point.
-
-### Backend on Railway
-
-1. Create a service from the `server` folder.
-2. Add the same environment variables.
-3. Start with `npm run start`.
+If you later lock down CORS on Render, make sure your Vercel production domain and any preview domains are included in `ALLOWED_ORIGINS` or `ALLOWED_ORIGIN_PATTERNS`.
 
 ## Notes
 
-- Saved mind maps are stored in browser local storage.
-- Share links encode map data in the URL, so very large maps may create long links.
-- Supabase persistence can be added later without changing the current UI architecture.
+- The API validates short and oversized inputs before calling Gemini.
+- The server returns JSON errors so the frontend can surface useful messages.
+- `npm run smoke` calls Gemini directly and requires a valid API key, so use it only when you want a real integration check.

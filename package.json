@@ -3,19 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "scripts": {
     "dev": "node --watch index.js",
     "build": "node -e \"console.log('Server build step: nothing to compile')\"",
-    "start": "node index.js"
+    "start": "node index.js",
+    "smoke": "node test.js"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
