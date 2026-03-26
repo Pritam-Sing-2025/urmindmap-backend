@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-notes-mindmap-api
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm run start
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: ALLOWED_ORIGIN
+        sync: false
+
